@@ -1,0 +1,356 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  width: 200px;
+  height: 500px;
+  overflow: hidden;
+  background: transparent;
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  font-size: 11px;
+  color: #2f3a40;
+  user-select: none;
+}
+
+button { font: inherit; cursor: pointer; }
+
+#app {
+  position: relative;
+  width: 200px;
+  height: 500px;
+  --fridge-color: #bfe3de;
+  --freezer-color: #bfe3de;
+  --handle-color: #f4f4f4;
+}
+
+/* ---------- 상단 손잡이 바 (끌어서 옮기기) ---------- */
+.topbar {
+  -webkit-app-region: drag;
+  height: 24px;
+  margin: 3px 14px 0;
+  padding: 0 4px 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 12px;
+  background: rgba(40, 52, 58, .55);
+  color: #fff;
+  opacity: .25;
+  transition: opacity .2s;
+}
+#app:hover .topbar { opacity: 1; }
+.grip { font-size: 12px; opacity: .8; letter-spacing: -1px; }
+.tools { display: flex; gap: 2px; }
+.tools button {
+  -webkit-app-region: no-drag;
+  width: 22px; height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  line-height: 20px;
+}
+.tools button:hover { background: rgba(255, 255, 255, .22); }
+
+/* ---------- 냉장고 몸체 ---------- */
+.fridge {
+  position: relative;
+  width: 172px;
+  height: 436px;
+  margin: 4px auto 0;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #aebdc2, #d4dee1 30%, #c3cfd3);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, .25), inset 0 0 0 1px rgba(0, 0, 0, .08);
+}
+.compartment {
+  position: relative;
+  perspective: 700px;
+  border-radius: 10px;
+}
+.compartment[data-door="fridge"] { height: 274px; }
+.compartment[data-door="freezer"] { flex: 1; }
+
+.feet { display: flex; justify-content: space-between; width: 140px; margin: 0 auto; }
+.feet i { width: 18px; height: 6px; border-radius: 0 0 4px 4px; background: #6e7c82; }
+
+/* ---------- 내부 ---------- */
+.interior {
+  position: absolute;
+  inset: 0;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: linear-gradient(#fdfefe, #eef4f6);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, .18);
+}
+.freezer-interior { background: linear-gradient(#f4f9fd, #e1edf6); }
+
+.light {
+  position: absolute;
+  left: 20%; right: 20%; top: -30px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(rgba(255, 250, 215, .95), rgba(255, 250, 215, 0) 70%);
+  opacity: 0;
+  transition: opacity .4s .25s;
+  pointer-events: none;
+}
+.compartment.open .light { opacity: 1; }
+
+.section {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 1px 2px 2px;
+}
+.section.shelf { border-bottom: 3px solid rgba(160, 200, 214, .75); }
+.section.crisper {
+  border-radius: 6px;
+  background: linear-gradient(rgba(190, 232, 196, .25), rgba(150, 210, 165, .45));
+  border: 1px solid rgba(110, 170, 125, .5);
+}
+.section.drawer {
+  border-radius: 6px;
+  background: linear-gradient(rgba(215, 234, 250, .5), rgba(185, 214, 238, .7));
+  border: 1px solid rgba(120, 160, 195, .55);
+}
+.section header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 13px;
+  font-size: 9px;
+  color: #7b8b93;
+}
+.section header .add {
+  width: 14px; height: 13px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #6b8792;
+  font-size: 12px;
+  line-height: 11px;
+}
+.section header .add:hover { background: rgba(0, 0, 0, .08); }
+
+.tags {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 3px;
+  padding: 1px;
+}
+.tags::-webkit-scrollbar { width: 3px; }
+.tags::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, .2); border-radius: 2px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 100%;
+  padding: 2px 3px 2px 6px;
+  border: 1px solid;
+  border-radius: 9px;
+  font-size: 10px;
+  line-height: 12px;
+  cursor: pointer;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .08);
+}
+.tag .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 84px; }
+.tag .d { font-size: 8.5px; font-weight: 700; opacity: .92; white-space: nowrap; }
+.tag .x {
+  width: 12px; height: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .12);
+  color: inherit;
+  font-size: 10px;
+  line-height: 12px;
+  opacity: .35;
+}
+.tag:hover .x { opacity: 1; }
+.tag .x:hover { background: rgba(0, 0, 0, .3); }
+.tag.leaving { transition: transform .18s, opacity .18s; transform: scale(.4); opacity: 0; }
+.compartment.revealing .tag { animation: tagIn .32s both; animation-delay: calc(var(--i, 0) * 28ms + .25s); }
+@keyframes tagIn { from { opacity: 0; transform: translateY(4px) scale(.85); } }
+
+.empty-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a4b1b7;
+  font-size: 10px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ---------- 문 ---------- */
+.door {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: pointer;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transition: transform .62s cubic-bezier(.3, .75, .25, 1);
+}
+.compartment.open .door {
+  transform: rotateY(-112deg);
+  pointer-events: none;
+}
+.door-front, .door-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+.door-front {
+  background-color: var(--door-color);
+  background-image: linear-gradient(100deg, rgba(255, 255, 255, .38), rgba(255, 255, 255, 0) 42%, rgba(0, 0, 0, .07));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1);
+}
+.door[data-door="fridge"] { --door-color: var(--fridge-color); }
+.door[data-door="freezer"] { --door-color: var(--freezer-color); }
+.door:hover .door-front { filter: brightness(1.03); }
+
+.door-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(90deg, #dfe6e9, #f3f6f7);
+  padding: 20% 10% 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22%;
+}
+.door-back i { display: block; height: 8px; border-radius: 3px; background: rgba(150, 175, 185, .6); }
+
+.doodle, .stickers {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.doodle:not([src]) { display: none; }
+.sticker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.handle {
+  position: absolute;
+  right: 8px;
+  width: 5px;
+  border-radius: 3px;
+  background: var(--handle-color);
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, .3), inset 0 0 0 1px rgba(0, 0, 0, .06);
+}
+.door[data-door="fridge"] .handle { top: 58%; height: 30%; }
+.door[data-door="freezer"] .handle { top: 12px; height: 42%; }
+
+.badge {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .72);
+  color: #4b5a61;
+  font-size: 9px;
+  line-height: 13px;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.badge.show { opacity: 1; }
+.badge .warn { color: #d32020; font-weight: 700; }
+
+/* ---------- 입력 창 ---------- */
+.modal {
+  position: absolute;
+  left: 8px; right: 8px; top: 32px;
+  z-index: 20;
+  padding: 10px;
+  border-radius: 12px;
+  background: #fffdf8;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .35);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: modalIn .18s ease-out;
+  user-select: text;
+}
+@keyframes modalIn { from { opacity: 0; transform: translateY(-6px); } }
+.modal.hidden { display: none; }
+.modal h3 { margin: 0 0 2px; font-size: 12px; }
+.modal label { display: flex; flex-direction: column; gap: 2px; font-size: 10px; color: #5d6b72; }
+.modal small { color: #9aa6ac; }
+.modal input, .modal select {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid #cfd8dc;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  font-size: 11px;
+  color: #2f3a40;
+}
+.modal input:focus, .modal select:focus { outline: 2px solid #8cc9c0; border-color: transparent; }
+.chips { display: flex; flex-wrap: wrap; gap: 3px; }
+.chips button {
+  padding: 1px 6px;
+  border: 1px solid #d5dde0;
+  border-radius: 9px;
+  background: #f3f6f7;
+  font-size: 9.5px;
+}
+.chips button:hover { background: #e2eef0; }
+.actions { display: flex; gap: 4px; margin-top: 2px; }
+.actions .spacer { flex: 1; }
+.actions button {
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: #e8edef;
+  font-size: 11px;
+}
+.actions .ok { background: #3f9d90; color: #fff; }
+.actions .del { background: #fbe3e3; color: #c42b2b; }
+.modal:not(.editing) .del { display: none; }
+
+/* ---------- 알림 ---------- */
+.toast {
+  position: absolute;
+  left: 12px; right: 12px; bottom: 22px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px 5px 10px;
+  border-radius: 10px;
+  background: rgba(35, 45, 50, .92);
+  color: #fff;
+  font-size: 10px;
+}
+.toast.hidden { display: none; }
+.toast span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toast button { border: 0; border-radius: 6px; background: #ffd66b; color: #3a2c00; font-size: 10px; padding: 2px 6px; }

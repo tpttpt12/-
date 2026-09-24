@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'">
+  <title>냉장고 꾸미기</title>
+  <link rel="stylesheet" href="deco.css">
+</head>
+<body>
+  <main class="stage">
+    <div class="fridge">
+      <div class="door" data-door="fridge">
+        <div class="stickers"></div>
+        <canvas class="doodle"></canvas>
+        <div class="handle"></div>
+      </div>
+      <div class="door" data-door="freezer">
+        <div class="stickers"></div>
+        <canvas class="doodle"></canvas>
+        <div class="handle"></div>
+      </div>
+    </div>
+    <p class="hint">이미지를 끌어다 놓거나 <kbd>Ctrl</kbd>+<kbd>V</kbd>로 붙여넣을 수 있어요</p>
+  </main>
+
+  <aside class="panel">
+    <section>
+      <h2>도구</h2>
+      <div class="seg" id="tools">
+        <button data-tool="move" class="on">✋ 스티커</button>
+        <button data-tool="pen">✏️ 펜</button>
+        <button data-tool="eraser">🧽 지우개</button>
+      </div>
+      <div class="pen-opts">
+        <div class="row">
+          <input type="color" id="penColor" value="#e8505b">
+          <div class="swatches" id="penSwatches"></div>
+        </div>
+        <label class="row">굵기 <input type="range" id="penSize" min="1" max="30" value="4"><span id="penSizeVal">4</span></label>
+        <div class="row">
+          <button id="undo">↶ 되돌리기</button>
+          <button id="clearDoodle">낙서 전부 지우기</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>스티커 붙이기</h2>
+      <div class="row">
+        <label class="btn primary">🖼️ 이미지 불러오기<input type="file" id="file" accept="image/*" multiple hidden></label>
+      </div>
+      <div class="emoji" id="emoji"></div>
+      <div class="row">
+        <input id="textSticker" maxlength="12" placeholder="글자 스티커 (예: 다이어트 중)">
+        <button id="addText">추가</button>
+      </div>
+      <p class="sub">붙일 문: <span class="seg small" id="targetDoor"><button data-door="fridge" class="on">냉장실</button><button data-door="freezer">냉동실</button></span></p>
+    </section>
+
+    <section id="selected" class="disabled">
+      <h2>고른 스티커</h2>
+      <label class="row">크기 <input type="range" id="stSize" min="5" max="120" value="35"></label>
+      <label class="row">회전 <input type="range" id="stRot" min="-180" max="180" value="0"></label>
+      <div class="row">
+        <button id="stFront">맨 앞으로</button>
+        <button id="stFlip">좌우 반전</button>
+        <button id="stDelete" class="danger">떼기</button>
+      </div>
+      <p class="sub">모서리 ● 끌기: 크기 · 위쪽 ◎ 끌기: 회전 · 휠: 크기</p>
+    </section>
+
+    <section>
+      <h2>문 색상</h2>
+      <label class="color-row">냉장실 문 <input type="color" id="fridgeColor"></label>
+      <label class="color-row">냉동실 문 <input type="color" id="freezerColor"></label>
+      <label class="color-row">손잡이 <input type="color" id="handleColor"></label>
+      <div class="swatches big" id="doorSwatches"></div>
+      <label class="check"><input type="checkbox" id="linkDoors" checked> 두 문 같은 색</label>
+    </section>
+
+    <section>
+      <div class="row">
+        <button id="clearStickers" class="danger">스티커 전부 떼기</button>
+      </div>
+      <p class="sub" id="status">바뀐 내용은 바로 냉장고에 반영돼요</p>
+    </section>
+  </aside>
+
+  <script src="common.js"></script>
+  <script src="deco.js"></script>
+</body>
+</html>

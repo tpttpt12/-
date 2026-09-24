@@ -1,0 +1,28 @@
+{
+  "name": "desktop-fridge",
+  "productName": "바탕화면 냉장고",
+  "version": "1.0.0",
+  "description": "바탕화면에 작게 떠 있는 냉장고 위젯 — 재료/유통기한 관리, 스티커 꾸미기, 레시피 추천",
+  "main": "src/main.js",
+  "author": "tpttpt12",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "preview": "node tools/preview-server.js",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win portable nsis",
+    "dist:mac": "electron-builder --mac dmg"
+  },
+  "devDependencies": {
+    "electron": "^44.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.tpttpt12.desktopfridge",
+    "productName": "DesktopFridge",
+    "files": ["src/**/*", "assets/**/*", "package.json"],
+    "win": { "icon": "assets/icon.png" },
+    "mac": { "icon": "assets/icon.png", "category": "public.app-category.lifestyle" },
+    "linux": { "icon": "assets/icon.png", "target": "AppImage" }
+  }
+}
