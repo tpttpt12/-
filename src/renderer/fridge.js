@@ -1,7 +1,7 @@
-const { SECTIONS, api, daysLeft, dLabel, tagStyle, addDays, uid, escapeHtml, sectionById } = window.Fridge;
+const { SECTIONS, DEFAULT_DECO, api, daysLeft, dLabel, tagStyle, addDays, uid, escapeHtml, sectionById } = window.Fridge;
 
 const app = document.getElementById('app');
-const form = document.querySelector('.modal');
+const form = document.querySelector('.sheet');
 const toast = document.querySelector('.toast');
 
 let state = { items: [], deco: {}, settings: {} };
@@ -9,11 +9,12 @@ let editingId = null;
 
 // ---------------------------------------------------------------- 칸 만들기
 for (const sec of SECTIONS) {
-  const interior = document.querySelector(`.compartment[data-door="${sec.door}"] .interior`);
+  const interior = document.querySelector(`.comp[data-door="${sec.door}"] .interior`);
   const el = document.createElement('div');
   el.className = `section ${sec.kind}`;
   el.dataset.section = sec.id;
-  el.innerHTML = `<header><span>${sec.name}</span><button class="add" title="${sec.name}에 넣기">+</button></header><div class="tags"></div>`;
+  el.innerHTML = `<div class="tags"></div><span class="label">${sec.name}</span>`
+    + `<button class="add" title="${sec.name}에 넣기"><svg class="ico" viewBox="0 0 12 12"><path d="M6 2.2v7.6M2.2 6h7.6"/></svg></button>`;
   interior.appendChild(el);
 
   const opt = document.createElement('option');
@@ -33,42 +34,32 @@ function renderItems() {
 
     box.innerHTML = items.map((it, i) => {
       const st = tagStyle(it.days);
-      const title = [it.name, it.expiry ? `유통기한 ${it.expiry} (${dLabel(it.days)})` : '유통기한 없음', it.memo]
+      const title = [it.name, it.expiry ? `${it.expiry} (${dLabel(it.days)})` : '기한 없음', it.memo]
         .filter(Boolean).join('\n');
       return `<span class="tag" data-id="${it.id}" title="${escapeHtml(title)}"
-        style="--i:${i};background:${st.bg};border-color:${st.border};color:${st.fg}">
-        <span class="nm">${escapeHtml(it.name)}</span>${it.days !== null ? `<span class="d">${dLabel(it.days)}</span>` : ''}<button class="x" title="빼기">×</button></span>`;
+        style="--i:${i};--tag-bg:${st.bg};background:${st.bg};color:${st.fg}">${escapeHtml(it.name)}<button class="x" title="빼기">×</button></span>`;
     }).join('');
-
-    const section = box.parentElement;
-    let hint = section.querySelector('.empty-hint');
-    if (!items.length && !hint) {
-      hint = document.createElement('div');
-      hint.className = 'empty-hint';
-      hint.textContent = '비어 있음';
-      section.appendChild(hint);
-    } else if (items.length && hint) {
-      hint.remove();
-    }
   }
 
   for (const door of ['fridge', 'freezer']) {
     const list = state.items.filter((it) => sectionById(it.section)?.door === door);
     const urgent = list.filter((it) => { const d = daysLeft(it.expiry); return d !== null && d <= 3; }).length;
-    const badge = document.querySelector(`.door[data-door="${door}"] .badge`);
-    badge.innerHTML = list.length ? `${list.length}개${urgent ? ` · <span class="warn">임박 ${urgent}</span>` : ''}` : '';
-    badge.classList.toggle('show', list.length > 0);
+    const alert = document.querySelector(`.door[data-door="${door}"] .alert`);
+    alert.textContent = urgent || '';
+    alert.classList.toggle('show', urgent > 0);
+    document.querySelector(`.door[data-door="${door}"]`).title = list.length
+      ? `${list.length}개${urgent ? ` · 기한 임박 ${urgent}개` : ''}` : '비어 있음';
   }
 }
 
 function renderDeco() {
-  const deco = state.deco || {};
-  app.style.setProperty('--fridge-color', deco.fridgeColor || '#bfe3de');
-  app.style.setProperty('--freezer-color', deco.freezerColor || '#bfe3de');
-  app.style.setProperty('--handle-color', deco.handleColor || '#f4f4f4');
+  const deco = { ...DEFAULT_DECO, ...state.deco };
+  app.style.setProperty('--fridge-color', deco.fridgeColor);
+  app.style.setProperty('--freezer-color', deco.freezerColor);
+  app.style.setProperty('--handle-color', deco.handleColor);
 
   for (const door of ['fridge', 'freezer']) {
-    const front = document.querySelector(`.door[data-door="${door}"] .door-front`);
+    const front = document.querySelector(`.door[data-door="${door}"] .front`);
     const doodle = front.querySelector('.doodle');
     const src = deco.doodles?.[door];
     if (src) doodle.src = src; else doodle.removeAttribute('src');
@@ -88,7 +79,7 @@ function render() {
 // ---------------------------------------------------------------- 문 열고 닫기
 const revealTimers = {};
 function setOpen(door, open) {
-  const comp = document.querySelector(`.compartment[data-door="${door}"]`);
+  const comp = document.querySelector(`.comp[data-door="${door}"]`);
   if (open && !comp.classList.contains('open')) {
     // 문이 열릴 때만 태그가 하나씩 나타나는 효과
     comp.classList.add('revealing');
@@ -157,10 +148,8 @@ function save(items) {
 function openForm(item = {}) {
   editingId = item.id || null;
   form.classList.toggle('editing', !!editingId);
-  form.querySelector('h3').textContent = editingId ? '재료 고치기' : '재료 넣기';
   form.querySelector('.ok').textContent = editingId ? '저장' : '넣기';
   form.itemName.value = item.name || '';
-  form.itemName.placeholder = editingId ? '' : '우유, 계란';
   form.section.value = item.section || defaultSection();
   form.expiry.value = item.expiry || (editingId ? '' : addDays(7));
   form.memo.value = item.memo || '';
@@ -170,8 +159,8 @@ function openForm(item = {}) {
 }
 
 function defaultSection() {
-  const fridgeOpen = document.querySelector('.compartment[data-door="fridge"]').classList.contains('open');
-  const freezerOpen = document.querySelector('.compartment[data-door="freezer"]').classList.contains('open');
+  const fridgeOpen = document.querySelector('.comp[data-door="fridge"]').classList.contains('open');
+  const freezerOpen = document.querySelector('.comp[data-door="freezer"]').classList.contains('open');
   return freezerOpen && !fridgeOpen ? 'freezer-1' : 'fridge-1';
 }
 
@@ -214,7 +203,7 @@ form.querySelector('.del').addEventListener('click', () => {
 });
 
 // ---------------------------------------------------------------- 상단 버튼 / 단축키
-document.querySelector('.tools').addEventListener('click', (e) => {
+document.querySelector('.bar').addEventListener('click', (e) => {
   const act = e.target.closest('button')?.dataset.act;
   if (act === 'add') openForm({});
   else if (act === 'deco' || act === 'recipes') api.openWindow(act);

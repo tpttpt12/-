@@ -3,23 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'">
-  <title>냉장고 레시피</title>
+  <title>레시피</title>
+  <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="recipes.css">
 </head>
 <body>
   <header>
-    <h1>🍳 냉장고 레시피</h1>
-    <p>지금 냉장고에 있는 재료를 조합해서 만들 수 있는 요리예요.</p>
+    <h1>오늘 뭐 해 먹지</h1>
+    <p>냉장고에 있는 재료로 만들 수 있는 요리</p>
   </header>
 
   <section class="mine">
-    <h2>내 재료 <small>눌러서 “이건 꼭 쓰고 싶어” 고르기</small></h2>
+    <div class="head">
+      <h2>내 재료</h2>
+      <span class="hint">눌러서 꼭 쓸 재료 고르기</span>
+    </div>
     <div id="mine" class="pills"></div>
   </section>
 
   <div class="filters">
-    <label><input type="checkbox" id="pantry" checked> 밥·마늘·기본양념은 있다고 치기</label>
-    <label><input type="checkbox" id="showAll"> 못 만드는 요리도 보기</label>
+    <label><input type="checkbox" id="pantry" checked>밥·기본양념은 있다고 치기</label>
+    <label><input type="checkbox" id="showAll">전부 보기</label>
   </div>
 
   <main id="list"></main>

@@ -12,6 +12,16 @@
 
   const DAY = 24 * 60 * 60 * 1000;
 
+  const DEFAULT_DECO = { fridgeColor: '#ebe7df', freezerColor: '#ebe7df', handleColor: '#c9c2b6' };
+  // 첫 버전의 민트색 기본값은 새 기본값으로 바꿔 준다
+  function migrateDeco(deco) {
+    const d = { ...deco };
+    if (d.fridgeColor === '#bfe3de') d.fridgeColor = DEFAULT_DECO.fridgeColor;
+    if (d.freezerColor === '#bfe3de') d.freezerColor = DEFAULT_DECO.freezerColor;
+    if (d.handleColor === '#f4f4f4') d.handleColor = DEFAULT_DECO.handleColor;
+    return d;
+  }
+
   function todayStart() {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -43,23 +53,29 @@
     return days > 0 ? `D-${days}` : `D+${-days}`;
   }
 
-  // 남은 날이 적을수록 초록 → 노랑 → 빨강 (14일 이상은 완전 초록)
-  const FULL_GREEN_DAYS = 14;
+  // 남은 날이 적을수록 차분한 회색 → 모래색 → 살구 → 빨강 (날짜 글자는 안 보이고 색으로만)
+  const STOPS = [
+    [0, [217, 84, 58]],
+    [1, [228, 128, 99]],
+    [3, [240, 195, 172]],
+    [6, [237, 224, 200]],
+    [10, [234, 231, 225]],
+  ];
+  function mix(a, b, t) { return a.map((v, i) => Math.round(v + (b[i] - v) * t)); }
   function tagStyle(days) {
-    if (days === null) {
-      return { bg: '#e9edf1', border: '#b9c3cc', fg: '#46525c' };
+    if (days === null) return { bg: 'rgb(236,234,230)', fg: '#77716a', level: 'none' };
+    if (days < 0) return { bg: 'rgb(150,46,30)', fg: '#fff', level: 'expired' };
+    let rgb = STOPS[STOPS.length - 1][1];
+    for (let i = 0; i < STOPS.length - 1; i++) {
+      const [d0, c0] = STOPS[i];
+      const [d1, c1] = STOPS[i + 1];
+      if (days <= d1) { rgb = mix(c0, c1, (days - d0) / (d1 - d0)); break; }
     }
-    if (days < 0) {
-      return { bg: '#8e1b1b', border: '#5c0f0f', fg: '#ffffff' };
-    }
-    const t = Math.min(days, FULL_GREEN_DAYS) / FULL_GREEN_DAYS; // 0(임박) ~ 1(여유)
-    const hue = Math.round(t * 125);
-    const light = Math.round(52 + t * 36);          // 임박할수록 진하게
-    const sat = Math.round(82 - t * 22);
+    const lum = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
     return {
-      bg: `hsl(${hue} ${sat}% ${light}%)`,
-      border: `hsl(${hue} ${sat}% ${Math.max(light - 22, 25)}%)`,
-      fg: light < 66 ? '#ffffff' : `hsl(${hue} 60% 22%)`,
+      bg: `rgb(${rgb.join(',')})`,
+      fg: lum < 0.66 ? '#fff' : lum < 0.85 ? '#6b3a26' : '#57524a',
+      level: days <= 3 ? 'urgent' : 'ok',
     };
   }
 
@@ -78,7 +94,7 @@
     const defaults = () => ({
       items: [],
       deco: {
-        fridgeColor: '#bfe3de', freezerColor: '#bfe3de', handleColor: '#f4f4f4',
+        fridgeColor: DEFAULT_DECO.fridgeColor, freezerColor: DEFAULT_DECO.freezerColor, handleColor: DEFAULT_DECO.handleColor,
         stickers: [], doodles: { fridge: null, freezer: null },
       },
       settings: { alwaysOnTop: false, bounds: null, pantry: true },
@@ -88,7 +104,7 @@
         const s = JSON.parse(localStorage.getItem(KEY));
         if (s) {
           const d = defaults();
-          return { items: s.items || [], deco: { ...d.deco, ...s.deco }, settings: { ...d.settings, ...s.settings } };
+          return { items: s.items || [], deco: migrateDeco({ ...d.deco, ...s.deco }), settings: { ...d.settings, ...s.settings } };
         }
       } catch { /* 없음 */ }
       return defaults();
@@ -111,7 +127,7 @@
   }
 
   window.Fridge = {
-    SECTIONS, DAY, todayStart, toISODate, addDays, daysLeft, dLabel, tagStyle, uid, escapeHtml,
+    SECTIONS, DAY, DEFAULT_DECO, migrateDeco, todayStart, toISODate, addDays, daysLeft, dLabel, tagStyle, uid, escapeHtml,
     api: window.fridge || browserBridge(),
     sectionById: (id) => SECTIONS.find((s) => s.id === id),
   };

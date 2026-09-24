@@ -19,9 +19,9 @@ function defaultState() {
   return {
     items: [],
     deco: {
-      fridgeColor: '#bfe3de',
-      freezerColor: '#bfe3de',
-      handleColor: '#f4f4f4',
+      fridgeColor: '#ebe7df',
+      freezerColor: '#ebe7df',
+      handleColor: '#c9c2b6',
       stickers: [],
       doodles: { fridge: null, freezer: null },
     },
@@ -41,6 +41,10 @@ function loadState() {
       settings: { ...def.settings, ...(saved.settings || {}) },
     };
     state.deco.doodles = { ...def.deco.doodles, ...(state.deco.doodles || {}) };
+    // 첫 버전의 민트색 기본값은 새 기본값으로
+    if (state.deco.fridgeColor === '#bfe3de') state.deco.fridgeColor = def.deco.fridgeColor;
+    if (state.deco.freezerColor === '#bfe3de') state.deco.freezerColor = def.deco.freezerColor;
+    if (state.deco.handleColor === '#f4f4f4') state.deco.handleColor = def.deco.handleColor;
   } catch {
     state = defaultState();
   }
@@ -125,12 +129,12 @@ function openChild(kind) {
     return;
   }
   const opts = kind === 'deco'
-    ? { width: 820, height: 800, minWidth: 700, minHeight: 640, title: '냉장고 꾸미기' }
-    : { width: 560, height: 720, minWidth: 420, minHeight: 480, title: '냉장고 레시피' };
+    ? { width: 760, height: 720, minWidth: 640, minHeight: 600, title: '냉장고 꾸미기' }
+    : { width: 460, height: 680, minWidth: 380, minHeight: 460, title: '레시피' };
   const win = new BrowserWindow({
     ...opts,
     autoHideMenuBar: true,
-    backgroundColor: '#fbf8f3',
+    backgroundColor: '#f4f2ee',
     icon: path.join(__dirname, '..', 'assets', 'icon.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.js') },
   });
@@ -148,8 +152,8 @@ function openChild(kind) {
 function buildMenu() {
   const login = app.getLoginItemSettings();
   return Menu.buildFromTemplate([
-    { label: '🎨 냉장고 꾸미기', click: () => openChild('deco') },
-    { label: '🍳 레시피 보기', click: () => openChild('recipes') },
+    { label: '꾸미기', click: () => openChild('deco') },
+    { label: '레시피', click: () => openChild('recipes') },
     { type: 'separator' },
     {
       label: '항상 위에 표시',

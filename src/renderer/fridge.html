@@ -4,78 +4,67 @@
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'">
   <title>냉장고</title>
+  <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="fridge.css">
 </head>
 <body>
   <div id="app">
-    <div class="topbar" title="여기를 잡고 끌어서 옮기기">
-      <span class="grip">⠿</span>
-      <div class="tools">
-        <button data-act="add" title="재료 넣기">＋</button>
-        <button data-act="deco" title="냉장고 꾸미기">🎨</button>
-        <button data-act="recipes" title="레시피 보기">🍳</button>
-        <button data-act="menu" title="메뉴">⋯</button>
-      </div>
-    </div>
+    <nav class="bar" title="잡고 끌어서 옮기기">
+      <button data-act="add" title="넣기"><svg class="ico" viewBox="0 0 12 12"><path d="M6 2.2v7.6M2.2 6h7.6"/></svg></button>
+      <button data-act="deco" title="꾸미기"><svg class="ico" viewBox="0 0 12 12"><path d="M2 10l.7-2.4L8.2 2.1a1.1 1.1 0 0 1 1.6 1.6L4.3 9.2z"/></svg></button>
+      <button data-act="recipes" title="레시피"><svg class="ico" viewBox="0 0 12 12"><path d="M1.6 6.2h8.8a4.4 4.4 0 0 1-8.8 0zM4.4 1.8v2M7.6 1.8v2"/></svg></button>
+      <button data-act="menu" title="메뉴"><svg class="ico" viewBox="0 0 12 12"><path d="M2.5 6h.01M6 6h.01M9.5 6h.01" stroke-width="2"/></svg></button>
+    </nav>
 
     <div class="fridge">
-      <div class="compartment" data-door="fridge">
-        <div class="interior fridge-interior">
-          <div class="light"></div>
-        </div>
+      <div class="comp" data-door="fridge">
+        <div class="interior"></div>
         <div class="door" data-door="fridge">
-          <div class="door-front">
+          <div class="front">
             <img class="doodle" alt="">
             <div class="stickers"></div>
             <div class="handle"></div>
-            <div class="badge"></div>
+            <div class="alert"></div>
           </div>
-          <div class="door-back"><i></i><i></i><i></i></div>
+          <div class="back"><i></i><i></i><i></i></div>
         </div>
       </div>
-
-      <div class="compartment" data-door="freezer">
-        <div class="interior freezer-interior">
-          <div class="light"></div>
-        </div>
+      <div class="comp" data-door="freezer">
+        <div class="interior"></div>
         <div class="door" data-door="freezer">
-          <div class="door-front">
+          <div class="front">
             <img class="doodle" alt="">
             <div class="stickers"></div>
             <div class="handle"></div>
-            <div class="badge"></div>
+            <div class="alert"></div>
           </div>
-          <div class="door-back"><i></i><i></i></div>
+          <div class="back"><i></i><i></i></div>
         </div>
       </div>
     </div>
     <div class="feet"><i></i><i></i></div>
 
-    <form class="modal hidden" autocomplete="off">
-      <h3>재료 넣기</h3>
-      <label>이름 <small>(쉼표로 여러 개)</small>
-        <input name="itemName" required maxlength="60" placeholder="우유, 계란">
-      </label>
-      <label>칸
+    <form class="sheet hidden" autocomplete="off">
+      <input name="itemName" required maxlength="60" placeholder="이름 (쉼표로 여러 개)">
+      <div class="field">
+        <span>칸</span>
         <select name="section"></select>
-      </label>
-      <label>유통기한
+      </div>
+      <div class="field">
+        <span>기한</span>
         <input name="expiry" type="date">
-      </label>
+      </div>
       <div class="chips">
-        <button type="button" data-days="0">오늘</button>
-        <button type="button" data-days="3">+3일</button>
-        <button type="button" data-days="7">+7일</button>
-        <button type="button" data-days="14">+2주</button>
-        <button type="button" data-days="30">+1달</button>
+        <button type="button" data-days="3">3일</button>
+        <button type="button" data-days="7">1주</button>
+        <button type="button" data-days="14">2주</button>
+        <button type="button" data-days="30">한 달</button>
         <button type="button" data-days="">없음</button>
       </div>
-      <label>메모
-        <input name="memo" maxlength="40" placeholder="예: 2개, 반쯤 남음">
-      </label>
+      <input name="memo" maxlength="40" placeholder="메모">
       <div class="actions">
-        <button type="button" class="del">삭제</button>
-        <span class="spacer"></span>
+        <button type="button" class="del">빼기</button>
+        <span></span>
         <button type="button" class="cancel">취소</button>
         <button type="submit" class="ok">넣기</button>
       </div>

@@ -1,4 +1,4 @@
-const { api, uid } = window.Fridge;
+const { api, uid, DEFAULT_DECO, migrateDeco } = window.Fridge;
 
 const body = document.body;
 const fridgeEl = document.querySelector('.fridge');
@@ -12,6 +12,7 @@ let deco = null;
 let tool = 'move';
 let selectedId = null;
 let targetDoor = 'fridge';
+let penColor = '#2e2c29';
 
 // ---------------------------------------------------------------- 저장
 let saveTimer = null;
@@ -19,17 +20,16 @@ function save(immediate) {
   clearTimeout(saveTimer);
   const run = () => {
     api.patch({ deco });
-    $('status').textContent = '저장됨 ✓ 냉장고에 반영됐어요';
   };
   if (immediate) run(); else saveTimer = setTimeout(run, 250);
 }
 
 // ---------------------------------------------------------------- 크기 맞추기
-const BASE_W = 172;
-const BASE_H = 436;
+const BASE_W = 164;
+const BASE_H = 448;
 function fit() {
   const stage = document.querySelector('.stage');
-  const s = Math.min((stage.clientHeight - 70) / BASE_H, (stage.clientWidth - 40) / BASE_W, 2.2);
+  const s = Math.min((stage.clientHeight - 90) / BASE_H, (stage.clientWidth - 60) / BASE_W, 2);
   fridgeEl.style.setProperty('--s', Math.max(s, 0.8).toFixed(3));
 }
 window.addEventListener('resize', fit);
@@ -37,11 +37,25 @@ window.addEventListener('resize', fit);
 // ---------------------------------------------------------------- 스티커 그리기
 function renderColors() {
   document.documentElement.style.setProperty('--handle-color', deco.handleColor);
+  fridgeEl.style.setProperty('--fridge-color', deco.fridgeColor);
   doors.fridge.style.setProperty('--door-color', deco.fridgeColor);
   doors.freezer.style.setProperty('--door-color', deco.freezerColor);
   $('fridgeColor').value = deco.fridgeColor;
   $('freezerColor').value = deco.freezerColor;
-  $('handleColor').value = deco.handleColor;
+  markSwatch('doorSwatches', deco.fridgeColor === deco.freezerColor ? deco.fridgeColor : null);
+  markSwatch('handleSwatches', deco.handleColor);
+}
+
+function markSwatch(id, color) {
+  $(id).querySelectorAll('i').forEach((i) => i.classList.toggle('on', i.dataset.c === color));
+}
+
+// 색 동그라미 줄 + 마지막에 직접 고르는 무지개 동그라미
+function swatchRow(id, colors, onPick) {
+  $(id).innerHTML = colors.map((c) => `<i style="background:${c}" data-c="${c}" title="${c}"></i>`).join('')
+    + '<label title="직접 고르기"><input type="color"></label>';
+  $(id).addEventListener('click', (e) => { if (e.target.dataset.c) onPick(e.target.dataset.c); });
+  $(id).querySelector('input').addEventListener('input', (e) => onPick(e.target.value));
 }
 
 function renderStickers() {
@@ -90,7 +104,6 @@ function select(id) {
 
 function setTarget(door) {
   targetDoor = door;
-  document.querySelectorAll('#targetDoor button').forEach((b) => b.classList.toggle('on', b.dataset.door === door));
   Object.entries(doors).forEach(([d, el]) => el.classList.toggle('target', d === door && tool === 'move'));
 }
 
@@ -298,8 +311,7 @@ window.addEventListener('paste', async (e) => {
 });
 
 // 이모지 / 글자 스티커
-const EMOJI = ['🍓', '🥕', '🥚', '🧀', '🥛', '🍉', '🍋', '🥑', '🐻', '🐱', '🐶', '🐰', '🐸', '🦆', '🌷', '🌻',
-  '⭐', '❤️', '🌈', '☁️', '🍀', '🎀', '😋', '🍕', '🍩', '🧁', '🍙', '🍜', '🔥', '✨', '💡', '📌'];
+const EMOJI = ['🍓', '🍋', '🥑', '🍒', '🥚', '🧀', '🐻', '🐱', '🐶', '🐰', '🌷', '🍀', '⭐', '❤️', '☁️', '📌'];
 function textToSticker(text, font, color, stroke) {
   const c = document.createElement('canvas');
   const ctx = c.getContext('2d');
@@ -328,15 +340,15 @@ $('emoji').addEventListener('click', (e) => {
   if (!b) return;
   addSticker(textToSticker(b.dataset.em, '120px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif', '#000'), { w: 0.26 });
 });
-$('addText').addEventListener('click', () => {
+$('addText').addEventListener('click', async () => {
   const t = $('textSticker').value.trim();
   if (!t) return;
-  addSticker(textToSticker(t, 'bold 56px "Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif', $('penColor').value, '#ffffff'), { w: 0.7, rot: 0 });
+  await document.fonts.load('700 56px Pretendard');
+  addSticker(textToSticker(t, '700 56px "Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif', penColor, '#ffffff'), { w: 0.6, rot: 0 });
   $('textSticker').value = '';
 });
 $('textSticker').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('addText').click(); });
 
-document.querySelectorAll('#targetDoor button').forEach((b) => b.addEventListener('click', () => setTarget(b.dataset.door)));
 
 // ---------------------------------------------------------------- 낙서
 const RES = 3; // 냉장고 위젯 1px당 캔버스 픽셀 수
@@ -344,8 +356,8 @@ const canvases = {};
 const history = [];
 for (const [door, el] of Object.entries(doors)) {
   const c = el.querySelector('.doodle');
-  c.width = 164 * RES;
-  c.height = (door === 'fridge' ? 274 : 150) * RES;
+  c.width = 158 * RES;
+  c.height = (door === 'fridge' ? 280 : 159) * RES;
   canvases[door] = c;
 }
 
@@ -381,7 +393,7 @@ for (const [door, c] of Object.entries(canvases)) {
     const r = c.getBoundingClientRect();
     const k = c.width / r.width;
     ctx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
-    ctx.strokeStyle = $('penColor').value;
+    ctx.strokeStyle = penColor;
     ctx.lineWidth = Number($('penSize').value) * RES * (tool === 'eraser' ? 2.5 : 1);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -433,10 +445,15 @@ $('clearDoodle').addEventListener('click', () => {
   save();
 });
 
-const PEN_COLORS = ['#222222', '#ffffff', '#e8505b', '#f79a3e', '#f5d547', '#4cb963', '#3a8ee6', '#8f63d6', '#f28fb3'];
-$('penSwatches').innerHTML = PEN_COLORS.map((c) => `<i style="background:${c}" data-c="${c}"></i>`).join('');
-$('penSwatches').addEventListener('click', (e) => { if (e.target.dataset.c) $('penColor').value = e.target.dataset.c; });
-$('penSize').addEventListener('input', (e) => { $('penSizeVal').textContent = e.target.value; });
+const PEN_COLORS = ['#2e2c29', '#ffffff', '#d9543a', '#e9a23b', '#6f9a6a', '#4f7ea8', '#b98bb0'];
+swatchRow('penSwatches', PEN_COLORS, (c) => { penColor = c; markSwatch('penSwatches', c); });
+markSwatch('penSwatches', penColor);
+function showPenSize() {
+  const px = Math.max(2, Math.min(22, Number($('penSize').value) * 0.9));
+  $('penDot').style.width = $('penDot').style.height = `${px}px`;
+}
+$('penSize').addEventListener('input', showPenSize);
+showPenSize();
 
 // ---------------------------------------------------------------- 도구 전환
 $('tools').addEventListener('click', (e) => {
@@ -451,13 +468,17 @@ $('tools').addEventListener('click', (e) => {
 });
 
 // ---------------------------------------------------------------- 문 색상
-const DOOR_COLORS = ['#bfe3de', '#f6f4ef', '#d9d9d9', '#3c4448', '#f7c8d0', '#fbe3a6', '#c9dcf5', '#d6c8f0', '#b8d8a8', '#f2b58a', '#e84a4a', '#243b55'];
-$('doorSwatches').innerHTML = DOOR_COLORS.map((c) => `<i style="background:${c}" data-c="${c}" title="${c}"></i>`).join('');
-$('doorSwatches').addEventListener('click', (e) => {
-  const c = e.target.dataset.c;
-  if (!c) return;
+const DOOR_COLORS = ['#ebe7df', '#f6f5f2', '#e3dccf', '#cdd3c5', '#cbd8d6', '#c9d3dc', '#e9d6cf', '#ede0bd', '#d4b49d', '#8d9aa1', '#6f7266', '#3a3936'];
+const HANDLE_COLORS = ['#c9c2b6', '#e9e7e3', '#b9bcbf', '#c2a46e', '#2f2e2c'];
+
+swatchRow('doorSwatches', DOOR_COLORS, (c) => {
   deco.fridgeColor = c;
   deco.freezerColor = c;
+  $('linkDoors').checked = true;
+  renderColors(); save();
+});
+swatchRow('handleSwatches', HANDLE_COLORS, (c) => {
+  deco.handleColor = c;
   renderColors(); save();
 });
 $('fridgeColor').addEventListener('input', (e) => {
@@ -470,16 +491,12 @@ $('freezerColor').addEventListener('input', (e) => {
   if ($('linkDoors').checked) deco.fridgeColor = e.target.value;
   renderColors(); save();
 });
-$('handleColor').addEventListener('input', (e) => {
-  deco.handleColor = e.target.value;
-  renderColors(); save();
-});
 
 // ---------------------------------------------------------------- 시작
 function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
 
 api.getState().then((s) => {
-  deco = JSON.parse(JSON.stringify(s.deco));
+  deco = migrateDeco({ ...DEFAULT_DECO, ...JSON.parse(JSON.stringify(s.deco)) });
   deco.stickers = deco.stickers || [];
   deco.doodles = deco.doodles || { fridge: null, freezer: null };
   $('linkDoors').checked = deco.fridgeColor === deco.freezerColor;
